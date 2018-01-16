@@ -1,7 +1,8 @@
-let learning_rate=0.1;
+let learning_rate=0.05;
 let perceptron;
 let points=[];
 let select;
+let isPerceptronWorking;
 
 function setup() {
 	frameRate(10);
@@ -11,6 +12,7 @@ function setup() {
 	select.option("Red");
 	select.position(width/2-20,height+20);
 	perceptron=new Perceptron();
+	isPerceptronWorking=true;
 //	createPoints();
 }
 
@@ -18,21 +20,45 @@ function draw() {
 	background(250);
 	perceptron.draw();
 	drawPoints();
-	if(learning_rate>0.00001){
-		learning_rate*=0.67;
-		perceptron.train(points);
-	}
 	drawLine();
+	if(!isPerceptronWorking){
+		if(learning_rate>0.001){
+			learning_rate*=0.9;
+			perceptron.train(points);
+		}else {
+			learning_rate=0.05;
+		}
+		isPerceptronWorking=testPerceptron();
+	}
+}
+
+function touchMoved(){
+	if(select.value()=="Red"){
+		select.value("Green");
+	}else{
+		select.value("Red");
+	}
 }
 
 function mousePressed(){
-	learning_rate=0.1;
-	let posx, posy, label;
-	posx=map(mouseX,0,width,-1,1);
-	posy=map(mouseY,0,height,1,-1);
-	label=(select.value()=="Green"?1:-1);
-	let point=new P(posx,posy,label);
-	points.push(point);
+	if(mouseX>0&&mouseX<width&&mouseY>0&&mouseY<height){
+		let posx, posy, label;
+		posx=map(mouseX,0,width,-1,1);
+		posy=map(mouseY,0,height,1,-1);
+		label=(select.value()=="Green"?1:-1);
+		let point=new P(posx,posy,label);
+		points.push(point);
+		isPerceptronWorking=testPerceptron();
+	}
+}
+
+function testPerceptron(){
+	for(let p of points){
+		if(perceptron.guess([p.x,p.y])!=p.label){
+			return false;
+		}
+	}
+	return true;
 }
 
 function f(x){
@@ -102,7 +128,7 @@ function Perceptron(n){
 	}
 
 	this.activation=function(val){
-		if(val>0){
+		if(val>=0){
 			return 1;
 		}else{
 			return -1;
